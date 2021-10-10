@@ -7,14 +7,14 @@ An Emacs Bible viewing interface utilizing the SWORD project's Diatheke command 
 * Usage
 M-x ~bible-open~
 ** Keybindings
-f - Next chapter
-b - Previous chapter
-g - Select book
-c - Select chapter
-s - Search
-w - Toggle word study
-x - Split display
-m - Select module
+- f - Next chapter
+- b - Previous chapter
+- g - Select book
+- c - Select chapter
+- s - Search
+- w - Toggle word study
+- x - Split display
+- m - Select module
 * Features
 - Chapter-based browsing of the Bible
 - Text Formatting
