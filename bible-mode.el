@@ -1,10 +1,55 @@
-(defvar bible-mode-book-module
-  "KJV"
-  "Book module for Diatheke to query.")
+;;; bible-mode.el --- A browsing interface for the SWORD Project's Diatheke CLI
 
-(defvar bible-mode-word-study-enabled
+;; Author: Zacalot
+;; Url: https://github.com/Zacalot/bible-mode
+;; Version: 1.0.0
+;; Package-Requires: ((emacs "24.1"))
+;; Keywords: diatheke, sword, research, bible
+
+;;; Commentary:
+
+;; This package uses the `diatheke' program to browse and search 
+;; Biblical texts provided by the Sword project. 
+;; Word study is also supported.
+
+;;; Usage:
+
+;; First install `diatheke'.  On Debian/Ubuntu it's in the `diatheke'
+;; package.
+
+;; Use M-x `bible-open' to open a Bible buffer.
+;; Use C-h f `bible-mode' to see available keybindings.
+
+;; You may customize `bible-mode-book-module' to set a
+;; default browsing module, as well as `bible-mode-word-study-enabled'
+;; to enable word study by default.
+
+;;; Code:
+
+;;;; Variables
+
+(defgroup bible-mode nil
+  "Settings for `bible-mode'."
+  :link '(url-link "https://github.com/Zacalot/bible-mode"))
+
+(defcustom bible-mode-book-module
+  "KJV"
+  "Book module for Diatheke to query."
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Module abbreviation (e.g. \"KJV\")"))
+  :group 'bible-mode)
+
+(defcustom bible-mode-word-study-enabled
   nil
-  "Display Hebrew and Greek words for study.")
+  "Display Strong Hebrew, Strong Greek, and Lemma words for study."
+  :type 'boolean
+  :group 'bible-mode)
+
+(defvar bible-mode-book-chapters
+  '(("Genesis" 50)("Exodus" 40)("Leviticus" 27)("Numbers" 36)("Deuteronomy" 34)("Joshua" 24)("Judges" 21)("Ruth" 4)("I Samuel" 31)("II Samuel" 24)("I Kings" 22)("II Kings" 25)("I Chronicles" 29)("II Chronicles" 36)("Ezra" 10)("Nehemiah" 13)("Esther" 10)("Job" 42)("Psalms" 150)("Proverbs" 31)("Ecclesiastes" 12)("Song of Solomon" 8)("Isaiah" 66)("Jeremiah" 52)("Lamentations" 5)("Ezekiel" 48)("Daniel" 12)("Hosea" 14)("Joel" 3)("Amos" 9)("Obadiah" 1)("Jonah" 4)("Micah" 7)("Nahum" 3)("Habakkuk" 3)("Zephaniah" 3)("Haggai" 2)("Zechariah" 14)("Malachi" 4)("Matthew" 28)("Mark" 16)("Luke" 24)("John" 21)("Acts" 28)("Romans" 16)("I Corinthians" 16)("II Corinthians" 13)("Galations" 6)("Ephesians" 6)("Philippians" 4)("Colossians" 4)("I Thessalonians" 5)("II Thessalonians" 3)("I Timothy" 6)("II Timothy" 4)("Titus" 3)("Philemon" 1)("Hebrews" 13)("James" 5)("I Peter" 5)("II Peter" 3)("I John" 5)("II John" 1)("III John" 1)("Jude" 1)("Revelation of John" 22))
+  "List of books in the Bible paired with their number of chapters.")
+
+;;;; Keymaps
 
 (defconst bible-mode-map (make-keymap))
 (define-key bible-mode-map "f" 'bible-mode-next-chapter)
@@ -36,6 +81,8 @@
 (define-key bible-mode-hebrew-keymap (kbd "RET") (lambda ()
                                                    (interactive)
                                                    (bible-term-hebrew (replace-regexp-in-string "[a-z]+" "" (thing-at-point 'word t)))))
+
+;;;; Modes
 
 (define-derived-mode bible-mode special-mode "Bible"
   "Mode for reading the Bible.
@@ -73,61 +120,132 @@
   (setq buffer-read-only t)
   (setq word-wrap t))
 
-(setq bible-mode-book-chapters '(("Genesis" 50)("Exodus" 40)("Leviticus" 27)("Numbers" 36)("Deuteronomy" 34)("Joshua" 24)("Judges" 21)("Ruth" 4)("I Samuel" 31)("II Samuel" 24)("I Kings" 22)("II Kings" 25)("I Chronicles" 29)("II Chronicles" 36)("Ezra" 10)("Nehemiah" 13)("Esther" 10)("Job" 42)("Psalms" 150)("Proverbs" 31)("Ecclesiastes" 12)("Song of Solomon" 8)("Isaiah" 66)("Jeremiah" 52)("Lamentations" 5)("Ezekiel" 48)("Daniel" 12)("Hosea" 14)("Joel" 3)("Amos" 9)("Obadiah" 1)("Jonah" 4)("Micah" 7)("Nahum" 3)("Habakkuk" 3)("Zephaniah" 3)("Haggai" 2)("Zechariah" 14)("Malachi" 4)("Matthew" 28)("Mark" 16)("Luke" 24)("John" 21)("Acts" 28)("Romans" 16)("I Corinthians" 16)("II Corinthians" 13)("Galations" 6)("Ephesians" 6)("Philippians" 4)("Colossians" 4)("I Thessalonians" 5)("II Thessalonians" 3)("I Timothy" 6)("II Timothy" 4)("Titus" 3)("Philemon" 1)("Hebrews" 13)("James" 5)("I Peter" 5)("II Peter" 3)("I John" 5)("II John" 1)("III John" 1)("Jude" 1)("Revelation of John" 22)))
+;;;; Functions
 
+;;;;; Commands
+
+;;;###autoload
 (defun bible-open(&optional global-chapter verse)
+  "Creates and opens a `bible-mode' buffer"
   (interactive)
   (let 
       (
        (buf (get-buffer-create (generate-new-buffer-name "*bible*"))))
     (set-buffer buf)
     (bible-mode)
-    (bible-mode-set-chapter (or global-chapter 1) verse)
+    (bible-mode--set-global-chapter (or global-chapter 1) verse)
     (set-window-buffer (get-buffer-window (current-buffer)) buf)))
 
+;;;###autoload
+(defun bible-mode-next-chapter()
+  "Pages to the next chapter for the active `bible-mode' buffer."
+  (interactive)
+  (bible-mode--set-global-chapter (+ bible-mode-global-chapter 1)))
+
+;;;###autoload
+(defun bible-mode-previous-chapter()
+  "Pages to the previous chapter for the active `bible-mode' buffer."
+  (interactive)
+  (bible-mode--set-global-chapter (max 1 (- bible-mode-global-chapter 1))))
+
+;;;###autoload
+(defun bible-mode-select-book()
+  "Queries user to select a new book and chapter for the current `bible-mode' buffer."
+  (interactive)
+  (let* (
+         (chapterData (assoc (completing-read "Book: " bible-mode-book-chapters nil t) bible-mode-book-chapters))
+         (bookChapter (bible-mode--get-book-global-chapter (nth 0 chapterData))))
+    (if bookChapter
+        (let* (
+               (chapter (string-to-number (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t))))
+          (bible-mode--set-global-chapter (+ bookChapter chapter))))))
+
+;;;###autoload
+(defun bible-mode-select-chapter()
+  "Queries user to select a new chapter for the current `bible-mode' buffer."
+  (interactive)
+  (let* (
+         (chapterData (assoc (bible-mode--get-current-book) bible-mode-book-chapters))
+         (bookChapter (bible-mode--get-book-global-chapter (nth 0 chapterData))))
+    (if bookChapter
+        (let* (
+               (chapter (string-to-number (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t))))
+          (bible-mode--set-global-chapter (+ bookChapter chapter))))))
+
+;;;###autoload
+(defun bible-mode-select-module()
+  "Queries user to select a new reading module for the current `bible-mode' buffer."
+  (interactive)
+  (let* (
+         (module (completing-read "Module: " (bible-mode--list-biblical-modules)))
+         )
+    (setq bible-mode-book-module module)
+    (bible-mode--display)))
+
+;;;###autoload
+(defun bible-mode-toggle-word-study()
+  "Toggles the inclusion of word study for the active `bible-mode' buffer."
+  (interactive)
+  (setq bible-mode-word-study-enabled (not bible-mode-word-study-enabled))
+  (if (equal major-mode 'bible-search-mode)
+      (bible-mode--display-search bible-mode-search-query bible-mode-search-mode)
+    (bible-mode--display)))
+
+;;;###autoload
+(defun bible-mode-split-display()
+  "Copies the active `bible-mode' buffer into a new buffer in another window."
+  (interactive)
+  (split-and-follow-vertically)
+  (bible-open bible-mode-global-chapter))
+
+;;;###autoload
 (defun bible-search(query)
+  "Queries the user for a Bible search query. 
+'lucene' mode requires an index to be built using the `mkfastmod' program."
   (interactive "sBible Search: ")
   (if (> (length query) 0)
       (let* (
              (searchmode (completing-read "Search Mode: " '("lucene" "phrase"))))
-        (bible-open-search query searchmode))))
+        (bible-mode--open-search query searchmode))))
 
+;;;###autoload
+(defun bible-search-mode-follow-verse()
+  "Follows the hovered verse in a `bible-search-mode' buffer,
+creating a new `bible-mode' buffer positioned at the specified verse."
+  (interactive)
+  (let* (
+         (text (thing-at-point 'line t))
+         book
+         chapter
+         verse)
+    (string-match ".+ [0-9]?[0-9]?[0-9]?:[0-9]?[0-9]?[0-9]?:" text)
+    (setq text (match-string 0 text))
+
+    (string-match " [0-9]?[0-9]?[0-9]?:" text)
+    (setq chapter (replace-regexp-in-string "[^0-9]" "" (match-string 0 text)))
+
+    (string-match ":[0-9]?[0-9]?[0-9]?" text)
+    (setq verse (replace-regexp-in-string "[^0-9]" "" (match-string 0 text)))
+    (setq book (replace-regexp-in-string "[ ][0-9]?[0-9]?[0-9]?:[0-9]?[0-9]?[0-9]?:$" "" text))
+    (bible-open (+ (bible-mode--get-book-global-chapter book) (string-to-number chapter)) (string-to-number verse))))
+
+;;;###autoload
 (defun bible-term-hebrew(term)
+  "Queries user for a Strong Hebrew Lexicon term."
   (interactive "sTerm: ")
-  (bible-open-term-hebrew term))
+  (bible-mode--open-term-hebrew term))
 
+;;;###autoload
 (defun bible-term-greek(term)
+  "Queries user for a Strong Greek Lexicon term."
   (interactive "sTerm: ")
-  (bible-open-term-greek term))
+  (bible-mode--open-term-greek term))
 
-(defun bible-open-term-hebrew(term)
-  (let 
-      (
-       (buf (get-buffer-create (concat "*bible-term-hebrew-" term "*"))))
-    (set-buffer buf)
-    (bible-term-hebrew-mode)
-    (bible-mode-display-term-hebrew term)
-    (pop-to-buffer buf nil t)))
 
-(defun bible-open-term-greek(term)
-  (let 
-      (
-       (buf (get-buffer-create (concat "*bible-term-greek-" term "*"))))
-    (set-buffer buf)
-    (bible-term-greek-mode)
-    (bible-mode-display-term-greek term)
-    (pop-to-buffer buf nil t)))
+;;;;; Support
 
-(defun bible-open-search(query searchmode)
-  (let 
-      (
-       (buf (get-buffer-create (concat "*bible-search-" (downcase bible-mode-book-module) "-" query "*"))))
-    (set-buffer buf)
-    (bible-search-mode)
-    (bible-mode-display-search query searchmode)
-    (pop-to-buffer buf nil t)))
-
-(defun bible-mode-exec-diatheke(query &optional filter format searchtype module)
+(defun bible-mode--exec-diatheke(query &optional filter format searchtype module)
+  "Executes `diatheke' with specified query options, returning the output."
   (with-temp-buffer
     (let (
           (args (list "diatheke"
@@ -156,10 +274,9 @@
       (apply 'call-process args))
     (buffer-string)))
 
-(defun bible-mode-verse-exists(verse)
-  (equal (substring (bible-mode-exec-diatheke verse nil "plain") 0 (length verse)) verse))
-
-(defun bible-mode-insert-node-recursive(node dom &optional iproperties notitle)
+(defun bible-mode--insert-domnode-recursive(node dom &optional iproperties notitle)
+  "Recursively parses a domnode from `libxml-parse-html-region''s usage on text
+produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with properties."
   (if (equal (dom-attr node 'who) "Jesus") 
       (setq iproperties (plist-put iproperties 'jesus t)))
 
@@ -191,7 +308,7 @@
         (if (and (not (eq (dom-tag subnode) 'p)) (not (eq (dom-tag subnode) 'q)) (not (eq "" (dom-text subnode))))
             (insert " "))
 
-        (bible-mode-insert-node-recursive subnode dom iproperties notitle)
+        (bible-mode--insert-domnode-recursive subnode dom iproperties notitle)
 
         (if (and bible-mode-word-study-enabled (not (stringp subnode)));;word study. Must be done after subnode is inserted recursively.
             (let (
@@ -244,16 +361,17 @@
   (if (equal (dom-tag node) 'title) ;;newline at end of title (i.e. those in Psalms)
       (insert "\n")))
 
-(defun bible-mode-display(&optional verse)
+(defun bible-mode--display(&optional verse)
+  "Renders text for `bible-mode'"
   (setq buffer-read-only nil)
   (erase-buffer)
 
-  (insert (bible-mode-exec-diatheke (concat "Genesis " (number-to-string bible-mode-chapter))))
+  (insert (bible-mode--exec-diatheke (concat "Genesis " (number-to-string bible-mode-global-chapter))))
 
   (let* (
          (html-dom-tree (libxml-parse-html-region (point-min) (point-max))))
     (erase-buffer)
-    (bible-mode-insert-node-recursive (dom-by-tag html-dom-tree 'body) html-dom-tree)
+    (bible-mode--insert-domnode-recursive (dom-by-tag html-dom-tree 'body) html-dom-tree)
     (goto-char (point-min))
     (while (search-forward (concat "(" bible-mode-book-module ")") nil t)
       (replace-match "")))
@@ -266,11 +384,124 @@
         (goto-char (string-match (regexp-opt `(,(concat ":" (number-to-string verse) ": "))) (buffer-string)))
         (beginning-of-line))))
 
-(defun bible-mode-display-term-hebrew(number)
+(defun bible-mode--get-book(global-chapter)
+  "Returns the book GLOBAL-CHAPTER points towards."
+  (let (
+        (sumChapter 0))
+    (dolist (curBook bible-mode-book-chapters)      
+      (when (and (> global-chapter sumChapter) (<= global-chapter (+ sumChapter (nth 1 curBook))))
+        (return (nth 0 curBook)))
+      (setq sumChapter (+ sumChapter (nth 1 curBook))))))
+
+(defun bible-mode--get-book-global-chapter(book)
+  "Returns BOOK's first chapter as a GLOBAL-CHAPTER,
+the number of chapters between it and Genesis 1."
+  (let (
+        (sumChapter 0))    
+    (dolist (curBook bible-mode-book-chapters)
+      (when (equal (nth 0 curBook) book)
+        (return sumChapter))
+      (setq sumChapter (+ sumChapter (nth 1 curBook))))))
+
+(defun bible-mode--get-current-book()
+  "Returns the book the active `bible-mode' buffer is viewing."
+  (bible-mode--get-book bible-mode-global-chapter))
+
+(defun bible-mode--list-biblical-modules()
+  "Returns a list of accessible Biblical Text modules."
+  (let* (
+         (text (bible-mode--exec-diatheke "modulelist" nil nil nil "system"))
+         modules)
+    (dolist (line (split-string text "\n"))
+      (if (equal line "Commentaries:")
+          (return))
+      (if (not (equal "Biblical Texts:" line))
+          (setq modules (cons
+                         (split-string line " : ")
+                         modules))))
+    modules))
+
+;;;;; Bible Searching
+
+(defun bible-mode--open-search(query searchmode)
+  "Opens a search buffer of QUERY using SEARCHMODE."
+  (let 
+      (
+       (buf (get-buffer-create (concat "*bible-search-" (downcase bible-mode-book-module) "-" query "*"))))
+    (set-buffer buf)
+    (bible-search-mode)
+    (bible-mode--display-search query searchmode)
+    (pop-to-buffer buf nil t)))
+
+(defun bible-mode--display-search(query searchmode)
+  "Renders results of search QUERY from SEARHCMODE"
   (setq buffer-read-only nil)
   (erase-buffer)
 
-  (insert (replace-regexp-in-string (regexp-opt '("(StrongsHebrew)")) "" (bible-mode-exec-diatheke number nil nil nil "StrongsHebrew")))
+  (if (catch 'no-results (let* (
+                                (term query)
+                                (result (string-trim (replace-regexp-in-string "Entries .+?--" "" (bible-mode--exec-diatheke query nil "plain" searchmode))))
+                                (match 0)
+                                (matchstr "")
+                                (verses "")
+                                fullverses)
+                           (if (equal result (concat "none (" bible-mode-book-module ")"))
+                               (throw 'no-results t))
+                           (while match
+                             (setq match (string-match ".+?:[0-9]?[0-9]?"
+                                                       result (+ match (length matchstr)))
+                                   matchstr (match-string 0 result))
+                             (if match
+                                 (setq verses (concat verses (replace-regexp-in-string ".+; " "" matchstr) ";"))))
+
+                           (setq match 0)
+                           (setq fullverses (bible-mode--exec-diatheke verses))
+
+                           (insert fullverses)
+                           (let* (
+                                  (html-dom-tree (libxml-parse-html-region (point-min) (point-max))))
+                             (erase-buffer)
+                             (bible-mode--insert-domnode-recursive (dom-by-tag html-dom-tree 'body) html-dom-tree nil t)
+
+                             (goto-char (point-min))
+                             (while (search-forward (concat "(" bible-mode-book-module ")") nil t)
+                               (replace-match "")))))
+      (insert (concat "No results found." (if (equal searchmode "lucene") " Verify index has been build with mkfastmod."))))
+
+  (setq mode-name (concat "Bible Search (" bible-mode-book-module ")"))
+  (setq buffer-read-only t)
+  (setq-local bible-mode-search-query query)
+  (setq-local bible-mode-search-mode searchmode)
+  (goto-char (point-min)))
+
+;;;;; Terms
+
+(defun bible-mode--open-term-hebrew(term)
+  "Opens a buffer of the Strong Hebrew TERM's definition"
+  (let 
+      (
+       (buf (get-buffer-create (concat "*bible-term-hebrew-" term "*"))))
+    (set-buffer buf)
+    (bible-term-hebrew-mode)
+    (bible-mode--display-term-hebrew term)
+    (pop-to-buffer buf nil t)))
+
+(defun bible-mode--open-term-greek(term)
+  "Opens a buffer of the Strong Greek TERM's definition"
+  (let 
+      (
+       (buf (get-buffer-create (concat "*bible-term-greek-" term "*"))))
+    (set-buffer buf)
+    (bible-term-greek-mode)
+    (bible-mode--display-term-greek term)
+    (pop-to-buffer buf nil t)))
+
+(defun bible-mode--display-term-hebrew(term)
+  "Render the definition of the Strong Hebrew TERM."
+  (setq buffer-read-only nil)
+  (erase-buffer)
+
+  (insert (replace-regexp-in-string (regexp-opt '("(StrongsHebrew)")) "" (bible-mode--exec-diatheke term nil nil nil "StrongsHebrew")))
 
   (let* (
          (text (buffer-string))
@@ -290,11 +521,12 @@
   (setq buffer-read-only t)
   (goto-char (point-min)))
 
-(defun bible-mode-display-term-greek(number)
+(defun bible-mode--display-term-greek(term)
+  "Render the definition of the Strong Greek TERM."
   (setq buffer-read-only nil)
   (erase-buffer)
 
-  (insert (replace-regexp-in-string (regexp-opt '("(StrongsGreek)")) "" (bible-mode-exec-diatheke number nil nil nil "StrongsGreek")))
+  (insert (replace-regexp-in-string (regexp-opt '("(StrongsGreek)")) "" (bible-mode--exec-diatheke term nil nil nil "StrongsGreek")))
 
   (let* (
          (text (buffer-string))
@@ -314,70 +546,16 @@
   (setq buffer-read-only t)
   (goto-char (point-min)))
 
-(defun bible-mode-display-search(query searchmode)
-  (setq buffer-read-only nil)
-  (erase-buffer)
+(defun bible-mode--set-global-chapter(chapter &optional verse)
+  "Sets the global chapter of the active `bible-mode' buffer."
+  (setq-local bible-mode-global-chapter chapter)
+  (bible-mode--display verse))
 
-  (if (catch 'no-results (let* (
-                                (term query)
-                                (result (string-trim (replace-regexp-in-string "Entries .+?--" "" (bible-mode-exec-diatheke query nil "plain" searchmode))))
-                                (match 0)
-                                (matchstr "")
-                                (verses "")
-                                fullverses)
-                           (if (equal result (concat "none (" bible-mode-book-module ")"))
-                               (throw 'no-results t))
-                           (while match
-                             (setq match (string-match ".+?:[0-9]?[0-9]?"
-                                                       result (+ match (length matchstr)))
-                                   matchstr (match-string 0 result))
-                             (if match
-                                 (setq verses (concat verses (replace-regexp-in-string ".+; " "" matchstr) ";"))))
+;;;;; Utilities
 
-                           (setq match 0)
-                           (setq fullverses (bible-mode-exec-diatheke verses))
-
-                           (insert fullverses)
-                           (let* (
-                                  (html-dom-tree (libxml-parse-html-region (point-min) (point-max))))
-                             (erase-buffer)
-                             (bible-mode-insert-node-recursive (dom-by-tag html-dom-tree 'body) html-dom-tree nil t)
-
-                             (goto-char (point-min))
-                             (while (search-forward (concat "(" bible-mode-book-module ")") nil t)
-                               (replace-match "")))))
-      (insert (concat "No results found." (if (equal searchmode "lucene") " Verify index has been build with mkfastmod."))))
-
-  (setq mode-name (concat "Bible Search (" bible-mode-book-module ")"))
-  (setq buffer-read-only t)
-  (setq-local bible-mode-search-query query)
-  (setq-local bible-mode-search-mode searchmode)
-  (goto-char (point-min)))
-
-(defun bible-mode-set-chapter(chapter &optional verse)
-  (setq-local bible-mode-chapter chapter)
-  (bible-mode-display verse))
-
-(defun bible-mode-next-chapter()
-  (interactive)
-  (bible-mode-set-chapter (+ bible-mode-chapter 1)))
-
-(defun bible-mode-previous-chapter()
-  (interactive)
-  (bible-mode-set-chapter (max 1 (- bible-mode-chapter 1))))
-
-(defun bible-mode-list-all-books()
-  (let* (books)
-    (progn
-      (dolist (book bible-mode-book-chapters)
-        (setq books (cons
-                     (cons
-                      (nth 0 book)
-                      (nth 0 book))
-                     books)))
-      books)))
-
-(defun bible-mode-list-numbers(min max &optional prefix)
+(defun bible-mode--list-number-range(min max &optional prefix)
+  "Returns a list containing entries for each integer between min and max.
+Used in tandem with `completing-read' for chapter selection."
   (let* (
          (num max)
          nums)
@@ -389,94 +567,3 @@
                   nums))
       (setq num (- num 1)))
     nums))
-
-(defun bible-mode-select-book()
-  (interactive)
-  (let* (
-         (chapterData (assoc (completing-read "Book: " bible-mode-book-chapters nil t) bible-mode-book-chapters))
-         (bookChapter (bible-mode-get-book-global-chapter (nth 0 chapterData))))
-    (if bookChapter
-        (let* (
-               (chapter (string-to-number (completing-read "Chapter: " (bible-mode-list-numbers 1 (nth 1 chapterData)) nil t))))
-          (bible-mode-set-chapter (+ bookChapter chapter))))))
-
-(defun bible-mode-select-chapter()
-  (interactive)
-  (let* (
-         (chapterData (assoc (bible-mode-get-current-book) bible-mode-book-chapters))
-         (bookChapter (bible-mode-get-book-global-chapter (nth 0 chapterData))))
-    (if bookChapter
-        (let* (
-               (chapter (string-to-number (completing-read "Chapter: " (bible-mode-list-numbers 1 (nth 1 chapterData)) nil t))))
-          (bible-mode-set-chapter (+ bookChapter chapter))))))
-
-(defun bible-mode-select-module()
-  (interactive)
-  (let* (
-         (module (completing-read "Module: " (bible-mode-list-biblical-modules)))
-         )
-    (setq bible-mode-book-module module)
-    (bible-mode-display)))
-
-(defun bible-mode-get-book-global-chapter(book)
-  (let (
-        (sumChapter 0))    
-    (dolist (curBook bible-mode-book-chapters)
-      (when (equal (nth 0 curBook) book)
-        (return sumChapter))
-      (setq sumChapter (+ sumChapter (nth 1 curBook))))))
-
-(defun bible-mode-get-book(chapter)
-  (let (
-        (sumChapter 0))
-    (dolist (curBook bible-mode-book-chapters)      
-      (when (and (> chapter sumChapter) (<= chapter (+ sumChapter (nth 1 curBook))))
-        (return (nth 0 curBook)))
-      (setq sumChapter (+ sumChapter (nth 1 curBook))))))
-
-(defun bible-mode-get-current-book()
-  (bible-mode-get-book bible-mode-chapter))
-
-(defun bible-mode-list-biblical-modules()
-  (let* (
-         (text (bible-mode-exec-diatheke "modulelist" nil nil nil "system"))
-         modules
-         )
-    (dolist (line (split-string text "\n"))
-      (if (equal line "Commentaries:")
-          (return))
-      (if (not (equal "Biblical Texts:" line))
-          (setq modules (cons
-                         (split-string line " : ")
-                         modules))))
-    modules))
-
-(defun bible-mode-toggle-word-study()
-  (interactive)
-  (setq bible-mode-word-study-enabled (not bible-mode-word-study-enabled))
-  (if (equal major-mode 'bible-search-mode)
-      (bible-mode-display-search bible-mode-search-query bible-mode-search-mode)
-    (bible-mode-display)))
-
-(defun bible-mode-split-display()
-  (interactive)
-  (split-and-follow-vertically)
-  (bible-open bible-mode-chapter))
-
-(defun bible-search-mode-follow-verse()
-  (interactive)
-  (let* (
-         (text (thing-at-point 'line t))
-         book
-         chapter
-         verse)
-    (string-match ".+ [0-9]?[0-9]?[0-9]?:[0-9]?[0-9]?[0-9]?:" text)
-    (setq text (match-string 0 text))
-
-    (string-match " [0-9]?[0-9]?[0-9]?:" text)
-    (setq chapter (replace-regexp-in-string "[^0-9]" "" (match-string 0 text)))
-
-    (string-match ":[0-9]?[0-9]?[0-9]?" text)
-    (setq verse (replace-regexp-in-string "[^0-9]" "" (match-string 0 text)))
-    (setq book (replace-regexp-in-string "[ ][0-9]?[0-9]?[0-9]?:[0-9]?[0-9]?[0-9]?:$" "" text))
-    (bible-open (+ (bible-mode-get-book-global-chapter book) (string-to-number chapter)) (string-to-number verse))))
