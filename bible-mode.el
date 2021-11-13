@@ -195,7 +195,9 @@
 (defun bible-mode-split-display()
   "Copies the active `bible-mode' buffer into a new buffer in another window."
   (interactive)
-  (split-and-follow-vertically)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
   (bible-open bible-mode-global-chapter))
 
 ;;;###autoload
