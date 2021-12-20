@@ -26,6 +26,10 @@
 
 ;;; Code:
 
+;;;; Requirementsn
+(require 'cl)
+(require 'dom)
+
 ;;;; Variables
 
 (defgroup bible-mode nil
@@ -154,11 +158,10 @@
   (interactive)
   (let* (
          (chapterData (assoc (completing-read "Book: " bible-mode-book-chapters nil t) bible-mode-book-chapters))
-         (bookChapter (bible-mode--get-book-global-chapter (nth 0 chapterData))))
-    (if bookChapter
-        (let* (
-               (chapter (string-to-number (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t))))
-          (bible-mode--set-global-chapter (+ bookChapter chapter))))))
+         (bookChapter (bible-mode--get-book-global-chapter (nth 0 chapterData)))
+         (chapter (if bookChapter (string-to-number (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t)))))
+    (if chapter
+        (bible-mode--set-global-chapter (+ bookChapter chapter)))))
 
 ;;;###autoload
 (defun bible-mode-select-chapter()
@@ -166,19 +169,17 @@
   (interactive)
   (let* (
          (chapterData (assoc (bible-mode--get-current-book) bible-mode-book-chapters))
-         (bookChapter (bible-mode--get-book-global-chapter (nth 0 chapterData))))
-    (if bookChapter
-        (let* (
-               (chapter (string-to-number (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t))))
-          (bible-mode--set-global-chapter (+ bookChapter chapter))))))
+         (bookChapter (bible-mode--get-book-global-chapter (nth 0 chapterData)))
+         (chapter (if bookChapter (string-to-number (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t)))))
+    (if chapter
+        (bible-mode--set-global-chapter (+ bookChapter chapter)))))
 
 ;;;###autoload
 (defun bible-mode-select-module()
   "Queries user to select a new reading module for the current `bible-mode' buffer."
   (interactive)
   (let* (
-         (module (completing-read "Module: " (bible-mode--list-biblical-modules)))
-         )
+         (module (completing-read "Module: " (bible-mode--list-biblical-modules))))
     (setq bible-mode-book-module module)
     (bible-mode--display)))
 
@@ -243,6 +244,16 @@ creating a new `bible-mode' buffer positioned at the specified verse."
   (interactive "sTerm: ")
   (bible-mode--open-term-greek term))
 
+;;;###autoload
+(defun bible-insert()
+  "Queries user to select a verse for insertion into the current buffer."
+  (interactive)
+  (let* (
+         (chapterData (assoc (completing-read "Book: " bible-mode-book-chapters nil t) bible-mode-book-chapters))
+         (chapter (if chapterData (completing-read "Chapter: " (bible-mode--list-number-range 1 (nth 1 chapterData)) nil t)))
+         (verse (if chapter (read-from-minibuffer "Verse: "))))
+    (if verse
+        (insert (string-trim (replace-regexp-in-string (regexp-opt `(,(concat "(" bible-mode-book-module ")"))) "" (bible-mode--exec-diatheke (concat (nth 0 chapterData) " " chapter ":" verse) nil "plain")))))))
 
 ;;;;; Support
 
