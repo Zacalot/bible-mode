@@ -41,16 +41,18 @@
   "Book module for Diatheke to query."
   :type '(choice (const :tag "None" nil)
                  (string :tag "Module abbreviation (e.g. \"KJV\")"))
+  :local t
   :group 'bible-mode)
 
 (defcustom bible-mode-word-study-enabled
   nil
   "Display Strong Hebrew, Strong Greek, and Lemma words for study."
   :type 'boolean
+  :local t
   :group 'bible-mode)
 
 (defvar bible-mode-book-chapters
-  '(("Genesis" 50)("Exodus" 40)("Leviticus" 27)("Numbers" 36)("Deuteronomy" 34)("Joshua" 24)("Judges" 21)("Ruth" 4)("I Samuel" 31)("II Samuel" 24)("I Kings" 22)("II Kings" 25)("I Chronicles" 29)("II Chronicles" 36)("Ezra" 10)("Nehemiah" 13)("Esther" 10)("Job" 42)("Psalms" 150)("Proverbs" 31)("Ecclesiastes" 12)("Song of Solomon" 8)("Isaiah" 66)("Jeremiah" 52)("Lamentations" 5)("Ezekiel" 48)("Daniel" 12)("Hosea" 14)("Joel" 3)("Amos" 9)("Obadiah" 1)("Jonah" 4)("Micah" 7)("Nahum" 3)("Habakkuk" 3)("Zephaniah" 3)("Haggai" 2)("Zechariah" 14)("Malachi" 4)("Matthew" 28)("Mark" 16)("Luke" 24)("John" 21)("Acts" 28)("Romans" 16)("I Corinthians" 16)("II Corinthians" 13)("Galations" 6)("Ephesians" 6)("Philippians" 4)("Colossians" 4)("I Thessalonians" 5)("II Thessalonians" 3)("I Timothy" 6)("II Timothy" 4)("Titus" 3)("Philemon" 1)("Hebrews" 13)("James" 5)("I Peter" 5)("II Peter" 3)("I John" 5)("II John" 1)("III John" 1)("Jude" 1)("Revelation of John" 22))
+  '(("Genesis" 50)("Exodus" 40)("Leviticus" 27)("Numbers" 36)("Deuteronomy" 34)("Joshua" 24)("Judges" 21)("Ruth" 4)("I Samuel" 31)("II Samuel" 24)("I Kings" 22)("II Kings" 25)("I Chronicles" 29)("II Chronicles" 36)("Ezra" 10)("Nehemiah" 13)("Esther" 10)("Job" 42)("Psalms" 150)("Proverbs" 31)("Ecclesiastes" 12)("Song of Solomon" 8)("Isaiah" 66)("Jeremiah" 52)("Lamentations" 5)("Ezekiel" 48)("Daniel" 12)("Hosea" 14)("Joel" 3)("Amos" 9)("Obadiah" 1)("Jonah" 4)("Micah" 7)("Nahum" 3)("Habakkuk" 3)("Zephaniah" 3)("Haggai" 2)("Zechariah" 14)("Malachi" 4)("Matthew" 28)("Mark" 16)("Luke" 24)("John" 21)("Acts" 28)("Romans" 16)("I Corinthians" 16)("II Corinthians" 13)("Galatians" 6)("Ephesians" 6)("Philippians" 4)("Colossians" 4)("I Thessalonians" 5)("II Thessalonians" 3)("I Timothy" 6)("II Timothy" 4)("Titus" 3)("Philemon" 1)("Hebrews" 13)("James" 5)("I Peter" 5)("II Peter" 3)("I John" 5)("II John" 1)("III John" 1)("Jude" 1)("Revelation of John" 22))
   "List of books in the Bible paired with their number of chapters.")
 
 ;;;; Keymaps
@@ -582,3 +584,4 @@ Used in tandem with `completing-read' for chapter selection."
     nums))
 
 (provide 'bible-mode)
+
