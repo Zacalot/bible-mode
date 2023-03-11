@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-;;;; Requirementsn
+;;;; Requirements
 (require 'cl)
 (require 'dom)
 
@@ -580,3 +580,5 @@ Used in tandem with `completing-read' for chapter selection."
                   nums))
       (setq num (- num 1)))
     nums))
+
+(provide 'bible-mode)
