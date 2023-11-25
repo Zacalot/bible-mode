@@ -51,6 +51,12 @@
   :local t
   :group 'bible-mode)
 
+(defcustom bible-mode-superscript-enabled
+  t
+  "Display Strong Hebrew, Strong Greek, and Lemma words in a smaller superscript form."
+  :type 'boolean
+  :group 'bible-mode)
+
 (defvar bible-mode-book-chapters
   '(("Genesis" 50)("Exodus" 40)("Leviticus" 27)("Numbers" 36)("Deuteronomy" 34)("Joshua" 24)("Judges" 21)("Ruth" 4)("I Samuel" 31)("II Samuel" 24)("I Kings" 22)("II Kings" 25)("I Chronicles" 29)("II Chronicles" 36)("Ezra" 10)("Nehemiah" 13)("Esther" 10)("Job" 42)("Psalms" 150)("Proverbs" 31)("Ecclesiastes" 12)("Song of Solomon" 8)("Isaiah" 66)("Jeremiah" 52)("Lamentations" 5)("Ezekiel" 48)("Daniel" 12)("Hosea" 14)("Joel" 3)("Amos" 9)("Obadiah" 1)("Jonah" 4)("Micah" 7)("Nahum" 3)("Habakkuk" 3)("Zephaniah" 3)("Haggai" 2)("Zechariah" 14)("Malachi" 4)("Matthew" 28)("Mark" 16)("Luke" 24)("John" 21)("Acts" 28)("Romans" 16)("I Corinthians" 16)("II Corinthians" 13)("Galatians" 6)("Ephesians" 6)("Philippians" 4)("Colossians" 4)("I Thessalonians" 5)("II Thessalonians" 3)("I Timothy" 6)("II Timothy" 4)("Titus" 3)("Philemon" 1)("Hebrews" 13)("James" 5)("I Peter" 5)("II Peter" 3)("I John" 5)("II John" 1)("III John" 1)("Jude" 1)("Revelation of John" 22))
   "List of books in the Bible paired with their number of chapters.")
@@ -344,9 +350,11 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
                             (insert (if floating " " "") (match-string 0 savlm))
                             (setq refstart (- (point) matchstrlen)
                                   refend (point))
-                            (put-text-property refstart refend 'font-lock-face `(
-                                                                                 :foreground "cyan"
-                                                                                 :height ,(if (not floating) .7)))
+                            (put-text-property refstart refend 'font-lock-face (if bible-mode-superscript-enabled
+                                                                                   `(
+                                                                                     :foreground "cyan"
+                                                                                     :height ,(if (not floating) .7))
+                                                                                 `(:foreground "cyan")))
                             (put-text-property refstart refend 'keymap bible-mode-greek-keymap)
                             (if (not floating)
                                 (put-text-property refstart refend 'display '(raise .6)))))
@@ -368,9 +376,11 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
                           (insert (if (eq iter 1) "" " ") word)
                           (setq refstart (- (point) (length word))
                                 refend (point))
-                          (put-text-property refstart refend 'font-lock-face `(
-                                                                               :foreground "cyan"
-                                                                               :height ,(if (eq iter 1) .7)))
+                          (put-text-property refstart refend 'font-lock-face (if bible-mode-superscript-enabled
+                                                                                 `(
+                                                                                   :foreground "cyan"
+                                                                                   :height ,(if (eq iter 1) .7))
+                                                                               `(:foreground "cyan")))
                           (put-text-property refstart refend 'keymap bible-mode-hebrew-keymap))))))))))
 
   (if (equal (dom-tag node) 'title) ;;newline at end of title (i.e. those in Psalms)
