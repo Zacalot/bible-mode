@@ -298,9 +298,9 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
   (if (and (not notitle) (equal (dom-tag node) 'title)) ;;newline at start of title (i.e. those in Psalms)
       (insert "\n"))
 
-  (dolist (subnode (dom-children node))
+  (cl-dolist (subnode (dom-children node))
     (if (and notitle (equal (dom-tag node) 'title))
-        (return))
+        (cl-return))
     (if (stringp subnode)
         (progn
           (let* (
@@ -353,7 +353,7 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
                       (setq match (string-match "G[0-9]+" savlm (+ match matchstrlen))))
 
                     (if (string-match "lemma.TR:.*" savlm) ;;Lemma
-                        (dolist (word (split-string (match-string 0 savlm) " "))
+                        (cl-dolist (word (split-string (match-string 0 savlm) " "))
                           (setq word (replace-regexp-in-string "[.:a-zA-Z0-9]+" "" word))
                           (insert " " word)
                           (setq refstart (- (point) (length word))
@@ -362,7 +362,7 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
                           (put-text-property refstart refend 'keymap bible-mode-lemma-keymap)))
 
                     (if (string-match "strong:H.*" savlm) ;;Hebrew
-                        (dolist (word (split-string (match-string 0 savlm) " "))
+                        (cl-dolist (word (split-string (match-string 0 savlm) " "))
                           (setq iter (+ iter 1))
                           (setq word (replace-regexp-in-string "strong:" "" word))
                           (insert (if (eq iter 1) "" " ") word)
@@ -403,9 +403,9 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
   "Returns the book GLOBAL-CHAPTER points towards."
   (let (
         (sumChapter 0))
-    (dolist (curBook bible-mode-book-chapters)      
+    (cl-dolist (curBook bible-mode-book-chapters)      
       (when (and (> global-chapter sumChapter) (<= global-chapter (+ sumChapter (nth 1 curBook))))
-        (return (nth 0 curBook)))
+        (cl-return (nth 0 curBook)))
       (setq sumChapter (+ sumChapter (nth 1 curBook))))))
 
 (defun bible-mode--get-book-global-chapter(book)
@@ -413,9 +413,9 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
 the number of chapters between it and Genesis 1."
   (let (
         (sumChapter 0))    
-    (dolist (curBook bible-mode-book-chapters)
+    (cl-dolist (curBook bible-mode-book-chapters)
       (when (equal (nth 0 curBook) book)
-        (return sumChapter))
+        (cl-return sumChapter))
       (setq sumChapter (+ sumChapter (nth 1 curBook))))))
 
 (defun bible-mode--get-current-book()
@@ -427,9 +427,9 @@ the number of chapters between it and Genesis 1."
   (let* (
          (text (bible-mode--exec-diatheke "modulelist" nil nil nil "system"))
          modules)
-    (dolist (line (split-string text "\n"))
+    (cl-dolist (line (split-string text "\n"))
       (if (equal line "Commentaries:")
-          (return))
+          (cl-return))
       (if (not (equal "Biblical Texts:" line))
           (setq modules (cons
                          (split-string line " : ")
