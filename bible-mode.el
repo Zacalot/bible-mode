@@ -350,10 +350,10 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
                             (insert (if floating " " "") (match-string 0 savlm))
                             (setq refstart (- (point) matchstrlen)
                                   refend (point))
-                            (put-text-property refstart refend 'font-lock-face (if bible-mode-superscript-enabled
+                            (put-text-property refstart refend 'font-lock-face (if (and bible-mode-superscript-enabled (not floating))
                                                                                    `(
                                                                                      :foreground "cyan"
-                                                                                     :height ,(if (not floating) .7))
+                                                                                     :height .7)
                                                                                  `(:foreground "cyan")))
                             (put-text-property refstart refend 'keymap bible-mode-greek-keymap)
                             (if (not floating)
@@ -376,10 +376,10 @@ produced by `bible-mode-exec-diatheke'. Outputs text to active buffer with prope
                           (insert (if (eq iter 1) "" " ") word)
                           (setq refstart (- (point) (length word))
                                 refend (point))
-                          (put-text-property refstart refend 'font-lock-face (if bible-mode-superscript-enabled
+                          (put-text-property refstart refend 'font-lock-face (if (and bible-mode-superscript-enabled (eq iter 1))
                                                                                  `(
                                                                                    :foreground "cyan"
-                                                                                   :height ,(if (eq iter 1) .7))
+                                                                                   :height .7)
                                                                                `(:foreground "cyan")))
                           (put-text-property refstart refend 'keymap bible-mode-hebrew-keymap))))))))))
 
