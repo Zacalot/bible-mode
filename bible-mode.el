@@ -267,13 +267,14 @@ creating a new `bible-mode' buffer positioned at the specified verse."
 
 (defun bible-mode--exec-diatheke(query &optional filter format searchtype module)
   "Executes `diatheke' with specified query options, returning the output."
-  (with-temp-buffer
+  (setq module (or module bible-mode-book-module)) ;; Variable is local to buffer, access outside temp buffer
+   (with-temp-buffer
     (let (
           (args (list "diatheke"
                       nil
                       (current-buffer)
                       t
-                      "-b" (or module bible-mode-book-module))))
+                      "-b" module)))
       (if filter (setq args (append args (list
                                           "-o" (pcase filter
                                                  ("jesus" "w"))
