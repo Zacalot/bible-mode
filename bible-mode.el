@@ -197,7 +197,7 @@
   (interactive)
   (setq bible-mode-word-study-enabled (not bible-mode-word-study-enabled))
   (if (equal major-mode 'bible-search-mode)
-      (bible-mode--display-search bible-mode-search-query bible-mode-search-mode)
+      (bible-mode--display-search bible-mode-search-query bible-mode-search-mode bible-mode-book-module)
     (bible-mode--display)))
 
 ;;;###autoload
@@ -268,7 +268,7 @@ creating a new `bible-mode' buffer positioned at the specified verse."
 (defun bible-mode--exec-diatheke(query &optional filter format searchtype module)
   "Executes `diatheke' with specified query options, returning the output."
   (setq module (or module bible-mode-book-module)) ;; Variable is local to buffer, access outside temp buffer
-   (with-temp-buffer
+  (with-temp-buffer
     (let (
           (args (list "diatheke"
                       nil
@@ -277,22 +277,18 @@ creating a new `bible-mode' buffer positioned at the specified verse."
                       "-b" module)))
       (if filter (setq args (append args (list
                                           "-o" (pcase filter
-                                                 ("jesus" "w"))
-                                          ))))
+                                                 ("jesus" "w"))))))
       (if searchtype (setq args (append args (list
                                               "-s" (pcase searchtype
                                                      ("lucene" "lucene")
-                                                     ("phrase" "phrase")
-                                                     )
-                                              ))))
+                                                     ("phrase" "phrase"))))))
       (setq args (append args (list
                                "-o" (pcase filter
                                       (_ "w"))
                                "-f" (pcase format
                                       ("plain" "plain")
                                       (_ "internal"))
-                               "-k" query
-                               )))
+                               "-k" query)))
       (apply 'call-process args))
     (buffer-string)))
 
@@ -453,20 +449,22 @@ the number of chapters between it and Genesis 1."
   "Opens a search buffer of QUERY using SEARCHMODE."
   (let 
       (
+       (searching-module bible-mode-book-module)
        (buf (get-buffer-create (concat "*bible-search-" (downcase bible-mode-book-module) "-" query "*"))))
     (set-buffer buf)
     (bible-search-mode)
-    (bible-mode--display-search query searchmode)
+    (bible-mode--display-search query searchmode searching-module)
     (pop-to-buffer buf nil t)))
 
-(defun bible-mode--display-search(query searchmode)
+(defun bible-mode--display-search(query searchmode searchmodule)
   "Renders results of search QUERY from SEARHCMODE"
   (setq buffer-read-only nil)
   (erase-buffer)
-
+  (if searchmodule
+      (setq bible-mode-book-module searchmodule))
   (if (catch 'no-results (let* (
                                 (term query)
-                                (result (string-trim (replace-regexp-in-string "Entries .+?--" "" (bible-mode--exec-diatheke query nil "plain" searchmode))))
+                                (result (string-trim (replace-regexp-in-string "Entries .+?--" "" (bible-mode--exec-diatheke query nil "plain" searchmode searchmodule))))
                                 (match 0)
                                 (matchstr "")
                                 (verses "")
@@ -492,7 +490,7 @@ the number of chapters between it and Genesis 1."
                              (goto-char (point-min))
                              (while (search-forward (concat "(" bible-mode-book-module ")") nil t)
                                (replace-match "")))))
-      (insert (concat "No results found." (if (equal searchmode "lucene") " Verify index has been build with mkfastmod."))))
+      (insert (concat "No results found." (if (equal searchmode "lucene") (concat " Verify index has been build with 'mkfastmod " bible-mode-book-module "' in a terminal.")))))
 
   (setq mode-name (concat "Bible Search (" bible-mode-book-module ")"))
   (setq buffer-read-only t)
