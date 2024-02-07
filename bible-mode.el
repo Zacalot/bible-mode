@@ -463,8 +463,7 @@ the number of chapters between it and Genesis 1."
   (if searchmodule
       (setq bible-mode-book-module searchmodule))
   (if (catch 'no-results (let* (
-                                (term query)
-                                (result (string-trim (replace-regexp-in-string "Entries .+?--" "" (bible-mode--exec-diatheke query nil "plain" searchmode searchmodule))))
+                                (result (string-trim (replace-regexp-in-string "Entries .+?--" "" (bible-mode--exec-diatheke (concat "\"" query "\"") nil "plain" searchmode searchmodule))))
                                 (match 0)
                                 (matchstr "")
                                 (verses "")
