@@ -4,6 +4,14 @@
 An Emacs Bible viewing interface utilizing the SWORD project's Diatheke command line program.
 * Dependencies
 ~diatheke~ and a Biblical Text module (uses KJV by default)
+* Installation
+Example installation with ~use-package~:
+#+begin_src emacs-lisp
+(use-package bible-mode
+  :straight (
+             :host github
+             :repo "Zacalot/bible-mode"))
+#+end_src
 * Usage
 M-x ~bible-open~
 ** Keybindings
