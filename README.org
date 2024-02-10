@@ -31,5 +31,13 @@ M-x ~bible-open~
   - Strong Hebrew
 - Greek & Hebrew Lexicon definition lookup
 - Searching
+* Org-Mode Integration
+Add this to your config file if you want to reference Strong's Concordance words in org-mode files as links:
+#+begin_src emacs-lisp
+(org-link-set-parameters "hebrew+strong"
+                         :follow #'bible-term-hebrew)
+(org-link-set-parameters "greek+strong"
+                         :follow #'bible-term-greek)
+#+end_src
 * Example
 [[file:example.png]]
