@@ -32,12 +32,14 @@ M-x ~bible-open~
 - Greek & Hebrew Lexicon definition lookup
 - Searching
 * Org-Mode Integration
-Add this to your config file if you want to reference Strong's Concordance words in org-mode files as links:
+Add this to your configuration file if you want to reference Strong's Concordance words in org-mode files as links:
 #+begin_src emacs-lisp
 (org-link-set-parameters "hebrew+strong"
                          :follow #'bible-term-hebrew)
 (org-link-set-parameters "greek+strong"
                          :follow #'bible-term-greek)
 #+end_src
+
+Then you can insert a link to a Hebrew or Greek concordance word with =C-c C-l= or =M-x org-insert-link=, which can be opened with =C-c C-o= or =M-x org-open-at-point=.
 * Example
 [[file:example.png]]
