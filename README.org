@@ -43,3 +43,5 @@ Add this to your configuration file if you want to reference Strong's Concordanc
 Then you can insert a link to a Hebrew or Greek concordance word with =C-c C-l= or =M-x org-insert-link=, which can be opened with =C-c C-o= or =M-x org-open-at-point=.
 * Example
 [[file:example.png]]
+* Issues
+If you are experiencing freezing issues with this package, consider trying a fork such as the one by [[https://github.com/fmgilham/bible-mode][Fred Gilham]], as it has been reported that it can resolve such issues.
