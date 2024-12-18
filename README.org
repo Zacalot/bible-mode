@@ -4,14 +4,23 @@
 An Emacs Bible viewing interface utilizing the SWORD project's Diatheke command line program.
 * Dependencies
 ~diatheke~ and a Biblical Text module (uses KJV by default)
+For Windows, diatheke is included with [[https://xiphos.org/download/][Xiphos]]. Modules can be downloaded from [[https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles][CrossWire]] or through the Xiphos program. For example, you can download the KJV module from their website [[https://crosswire.org/sword/servlet/SwordMod.Verify?modName=KJV&pkgType=raw][here]]. Once downloaded, extract the zip's contents to a directory.
+Diatheke searches for modules according to the ~SWORD_PATH~ environment variable, which can be configured as such:
+#+begin_src emacs-lisp
+(setenv "SWORD_PATH" "path/to/modules")
+#+end_src
+Note the path here should contain the "mods.d" folder.
 * Installation
 Example installation with ~use-package~:
 #+begin_src emacs-lisp
 (use-package bible-mode
   :straight (
              :host github
-             :repo "Zacalot/bible-mode"))
+                   :repo "Zacalot/bible-mode")
+  :config
+  (setenv "SWORD_PATH" "path/to/modules"))
 #+end_src
+Be sure to configure ~SWORD_PATH~ to fit your system, or remove that line if you have it set elsewhere.
 * Usage
 M-x ~bible-open~
 ** Keybindings
@@ -43,5 +52,3 @@ Add this to your configuration file if you want to reference Strong's Concordanc
 Then you can insert a link to a Hebrew or Greek concordance word with =C-c C-l= or =M-x org-insert-link=, which can be opened with =C-c C-o= or =M-x org-open-at-point=.
 * Example
 [[file:example.png]]
-* Issues
-If you are experiencing freezing issues with this package, consider trying a fork such as the one by [[https://github.com/fmgilham/bible-mode][Fred Gilham]], as it has been reported that it can resolve such issues.
