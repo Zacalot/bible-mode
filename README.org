@@ -4,7 +4,7 @@
 An Emacs Bible viewing interface utilizing the SWORD project's Diatheke command line program.
 * Dependencies
 ~diatheke~ and a Biblical Text module (uses KJV by default)
-For Windows, diatheke is included with [[https://xiphos.org/download/][Xiphos]]. Modules can be downloaded from [[https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles][CrossWire]] or through the Xiphos program. For example, you can download the KJV module from their website [[https://crosswire.org/sword/servlet/SwordMod.Verify?modName=KJV&pkgType=raw][here]]. Once downloaded, extract the zip's contents to a directory.
+For Windows, diatheke is included with [[https://xiphos.org/download/][Xiphos]]. Modules can be downloaded from [[https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles][CrossWire]] or through the Xiphos program. For example, you can download the KJV module from their website [[https://crosswire.org/sword/servlet/SwordMod.Verify?modName=KJV&pkgType=raw][here]]. Once downloaded, extract the zip's contents to a directory. Note also this package's Hebrew and Greek lexicon lookup is designed to work with the StrongsGreek and StrongsHebrew dictionaries from this [[https://crosswire.org/sword/modules/ModDisp.jsp?modType=Dictionaries][page]].
 Diatheke searches for modules according to the ~SWORD_PATH~ environment variable, which can be configured as such:
 #+begin_src emacs-lisp
 (setenv "SWORD_PATH" "path/to/modules")

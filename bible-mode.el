@@ -544,30 +544,60 @@ the number of chapters between it and Genesis 1."
   (setq buffer-read-only t)
   (goto-char (point-min)))
 
-(defun bible-mode--display-term-greek(term)
-  "Render the definition of the Strong Greek TERM."
+(defun bible-mode--display-term-greek (term)
+  "Render the definition of the Strong Greek TERM using libxml-parse-html-region."
   (setq buffer-read-only nil)
   (erase-buffer)
-
-  (insert (replace-regexp-in-string (regexp-opt '("(StrongsGreek)")) "" (bible-mode--exec-diatheke term nil nil nil "StrongsGreek")))
-
-  (let* (
-         (text (buffer-string))
-         (match 0)
-         (matchstrlen 0)
-         refstart
-         refend)
-    (while match
-      (if (> match 0)
-          (progn
-            (setq matchstrlen (length (match-string 0 text)))
-            (setq refstart match
-                  refend (+ match matchstrlen 1))
-            (put-text-property refstart refend 'font-lock-face `(:foreground "cyan"))
-            (put-text-property refstart refend 'keymap bible-mode-greek-keymap)))
-      (setq match (string-match "[0-9]+" text (+ match matchstrlen)))))
-  (setq buffer-read-only t)
-  (goto-char (point-min)))
+  
+  (let* ((greekinfo (bible-mode--exec-diatheke term nil nil nil "StrongsGreek")))
+    (if (bible-mode--has-markup-p greekinfo)
+        (let* ((xml-data greekinfo)
+               (dom (with-temp-buffer
+                      (insert xml-data)
+                      (libxml-parse-html-region (point-min) (point-max))))
+               (entry (car (dom-by-tag dom 'entryfree)))
+               (strong-number (dom-attr entry 'n)))
+          
+          ;; Display Strong's number
+          (insert (propertize (format "Strong's #%s: " strong-number)
+                              'font-lock-face '(:foreground "yellow" :weight bold))
+                  "\n\n")
+          
+          ;; Display Greek word
+          (let ((greek (dom-text (car (dom-by-tag entry 'orth)))))
+            (insert (propertize greek 'font-lock-face '(:foreground "cyan")) "\n"))
+          
+          ;; Display transliteration
+          (let ((trans (dom-text (car (dom-by-tag entry 'orth)))))
+            (when (equal (dom-attr (car (dom-by-tag entry 'orth)) 'type) "trans")
+              (insert (propertize trans 'font-lock-face '(:foreground "green")) "\n")))
+          
+          ;; Display pronunciation
+          (let ((pron (dom-text (car (dom-by-tag entry 'pron)))))
+            (insert (propertize pron 'font-lock-face '(:slant italic)) "\n\n"))
+          
+          ;; Display definition
+          (let ((def (dom-texts (dom-by-tag entry 'def))))
+            (insert (propertize "Definition:" 'font-lock-face '(:weight bold)) "\n")
+            (insert def)))
+      
+      ;; else, no markup
+      (insert (replace-regexp-in-string (regexp-opt '("(StrongsGreek)")) "" greekinfo)))
+    
+    ;; Common code for number hotlinking
+    (let ((text (buffer-string))
+          (case-fold-search nil)
+          (match 0)
+          (matchstrlen 0))
+      (while (setq match (string-match "\\b[0-9]+\\b" text (+ match matchstrlen)))
+        (let ((refstart (+ (point-min) match))
+              (refend (+ (point-min) match (length (match-string 0 text)))))
+          (put-text-property refstart refend 'font-lock-face '(:foreground "cyan"))
+          (put-text-property refstart refend 'keymap bible-mode-greek-keymap))
+        (setq matchstrlen (length (match-string 0 text)))))
+    
+    (setq buffer-read-only t)
+    (goto-char (point-min))))
 
 (defun bible-mode--set-global-chapter(chapter &optional verse)
   "Sets the global chapter of the active `bible-mode' buffer."
@@ -575,6 +605,10 @@ the number of chapters between it and Genesis 1."
   (bible-mode--display verse))
 
 ;;;;; Utilities
+
+(defun bible-mode--has-markup-p (string)
+  "Return t if STRING contains markup, nil otherwise."
+  (string-match-p "<[^>]+>\\|&[a-z]+;" string))
 
 (defun bible-mode--list-number-range(min max &optional prefix)
   "Returns a list containing entries for each integer between min and max.
